@@ -38,6 +38,16 @@ async function run() {
     try {
         const usersCollection = client.db("used-products-resale-portal").collection("users");
         const categoriesCollection = client.db("used-products-resale-portal").collection("categories");
+        const productsCollection = client.db("used-products-resale-portal").collection("products");
+
+        //All product get
+        app.get('/products', async (req, res) => {
+            // const id = req.params.id;
+            // const query = { _id: ObjectId(id) }
+            const query = {};
+            const result = await productsCollection.find(query).toArray()
+            res.send(result);
+        });
 
         // JWT
         app.get('/jwt', async (req, res) => {
@@ -69,8 +79,16 @@ async function run() {
         app.get('/categories', async (req, res) => {
             const query = {};
             const cursors = categoriesCollection.find(query)
-            const services = await cursors.toArray()
-            res.send(services)
+            const categorie = await cursors.toArray()
+            res.send(categorie)
+        })
+
+        // Sigble categori click
+        app.get('/categories/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const categorie = await categoriesCollection.findOne(query)
+            res.send(categorie)
         })
 
 
