@@ -37,6 +37,7 @@ function verifyJWT(req, res, next) {
 async function run() {
     try {
         const usersCollection = client.db("used-products-resale-portal").collection("users");
+        const categoriesCollection = client.db("used-products-resale-portal").collection("categories");
 
         // JWT
         app.get('/jwt', async (req, res) => {
@@ -63,6 +64,15 @@ async function run() {
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
+
+        //All category
+        app.get('/categories', async (req, res) => {
+            const query = {};
+            const cursors = categoriesCollection.find(query)
+            const services = await cursors.toArray()
+            res.send(services)
+        })
+
 
     } finally {
         //   await client.close();
