@@ -76,6 +76,24 @@ async function run() {
             res.send(result);
         })
 
+
+
+        // Update user role Admin
+        app.put('/users/admin/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
+
+
         //All category
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -101,7 +119,7 @@ async function run() {
         })
 
         //get bookings
-        app.get('/bookings', async (req, res) => {
+        app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email;
 
             const decodedEmail = req.decoded.email;
