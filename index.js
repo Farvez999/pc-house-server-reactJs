@@ -83,12 +83,20 @@ async function run() {
             res.send(categorie)
         })
 
-        // Sigble categori click
-        app.get('/categories/:id', async (req, res) => {
+        app.get('/categorie/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const categorie = await categoriesCollection.findOne(query)
             res.send(categorie)
+        })
+
+        app.get('/categories/:name', async (req, res) => {
+            const name = req.params.name;
+            const query = {
+                categories_name: name
+            }
+            const result = await productsCollection.find(query).toArray()
+            res.send(result)
         })
 
 
