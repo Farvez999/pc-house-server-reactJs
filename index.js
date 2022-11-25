@@ -39,6 +39,7 @@ async function run() {
         const usersCollection = client.db("used-products-resale-portal").collection("users");
         const categoriesCollection = client.db("used-products-resale-portal").collection("categories");
         const productsCollection = client.db("used-products-resale-portal").collection("products");
+        const bookingsCollection = client.db("used-products-resale-portal").collection("bookings");
 
         //All product get
         app.get('/products', async (req, res) => {
@@ -97,6 +98,45 @@ async function run() {
             }
             const result = await productsCollection.find(query).toArray()
             res.send(result)
+        })
+
+        //get bookings
+        app.get('/bookings', async (req, res) => {
+            const email = req.query.email;
+
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            // console.log('token', req.headers.authorization)
+
+            const query = { email: email };
+            const bookings = await bookingsCollection.find(query).toArray();
+            res.send(bookings);
+        })
+
+        // bookings post (submit data)
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            console.log(booking)
+
+            // const query = {
+            //     appointmentDate: booking.appointmentDate,
+            //     email: booking.email,
+            //     treatment: booking.treatment
+
+            // }
+
+            // const alreadyBooked = await bookingsCollection.find(query).toArray();
+
+            // if (alreadyBooked.length) {
+            //     const message = `You have already Booking on ${booking.appointmentDate}`
+            //     return res.send({ acknowledged: false, message });
+            // }
+
+            const result = await bookingsCollection.insertOne(booking)
+            res.send(result);
         })
 
 
