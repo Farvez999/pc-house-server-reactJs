@@ -2,8 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const { default: Stripe } = require('stripe');
 require('dotenv').config();
 
+const stripe = require("stripe")('sk_test_51M6KI7Jb9nyriLWoahD6dzwy06PfzLdDBt72MjJv1quIUgJXRQXAhI7bfH617cUKES7G5eQpCBnKV6KooQwrda5c00oLKLZP0w');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -40,6 +42,7 @@ async function run() {
         const categoriesCollection = client.db("used-products-resale-portal").collection("categories");
         const productsCollection = client.db("used-products-resale-portal").collection("products");
         const bookingsCollection = client.db("used-products-resale-portal").collection("bookings");
+        const paymentsCollection = client.db("used-products-resale-portal").collection("payments");
 
         const verifyAdmin = async (req, res, next) => {
             const decodedEmail = req.decoded.email;
@@ -106,14 +109,6 @@ async function run() {
             res.send(result);
         });
 
-        // app.get('/products/:name', async (req, res) => {
-        //     const name = req.params.name;
-        //     const query = {
-        //         categories_name: name
-        //     }
-        //     const result = await productsCollection.find(query).toArray()
-        //     res.send(result)
-        // })
 
         app.post('/addProduct', verifyJWT, verifySeller, async (req, res) => {
             const product = req.body;
@@ -175,8 +170,6 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({ isSeller: user?.role === 'Seller' });
         })
-
-
 
         // Update user role Admin
         app.put('/users/admin/:id', verifyJWT, async (req, res) => {
@@ -247,6 +240,50 @@ async function run() {
             // }
 
             const result = await bookingsCollection.insertOne(booking)
+            res.send(result);
+        })
+
+        // Payment booking api
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const booking = await bookingsCollection.findOne(query)
+            res.send(booking);
+        })
+
+        // Payment Api
+
+        app.post("/create-payment-intent", async (req, res) => {
+            const booking = req.body;
+            console.log(booking)
+            const resalePrice = booking.resalePrice
+            const amount = resalePrice * 100
+
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ]
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        })
+
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            const id = payment.bookingId
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
             res.send(result);
         })
 
