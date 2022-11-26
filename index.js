@@ -63,21 +63,6 @@ async function run() {
             next();
         }
 
-        //All product get
-        app.get('/products', async (req, res) => {
-            // const id = req.params.id;
-            // const query = { _id: ObjectId(id) }
-            const query = {};
-            const result = await productsCollection.find(query).toArray()
-            res.send(result);
-        });
-
-        app.post('/addProduct', verifyJWT, verifySeller, async (req, res) => {
-            const product = req.body;
-            const result = await productsCollection.insertOne(product);
-            res.send(result);
-        })
-
         // JWT
         app.get('/jwt', async (req, res) => {
             const email = req.query.email;
@@ -89,6 +74,62 @@ async function run() {
             }
             res.status(403).send({ accessToken: '' })
         });
+
+        //All category
+        app.get('/categories', async (req, res) => {
+            const query = {};
+            const cursors = categoriesCollection.find(query)
+            const categorie = await cursors.toArray()
+            res.send(categorie)
+        })
+
+        app.get('/categorie/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const categorie = await categoriesCollection.findOne(query)
+            res.send(categorie)
+        })
+
+        app.get('/categories/:name', async (req, res) => {
+            const name = req.params.name;
+            const query = {
+                category: name
+            }
+            const result = await productsCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        //All product get
+        app.get('/products', async (req, res) => {
+            const query = {};
+            const result = await productsCollection.find(query).toArray()
+            res.send(result);
+        });
+
+        // app.get('/products/:name', async (req, res) => {
+        //     const name = req.params.name;
+        //     const query = {
+        //         categories_name: name
+        //     }
+        //     const result = await productsCollection.find(query).toArray()
+        //     res.send(result)
+        // })
+
+        app.post('/addProduct', verifyJWT, verifySeller, async (req, res) => {
+            const product = req.body;
+            const result = await productsCollection.insertOne(product);
+            res.send(result);
+        })
+
+        // Seller delete
+        app.delete('/products/:id', verifyJWT, verifySeller, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
 
         //All User 
         app.get('/users', async (req, res) => {
@@ -127,6 +168,7 @@ async function run() {
             res.send({ isAdmin: user?.role === 'admin' });
         })
 
+        //User get Seller permistion
         app.get('/users/seller/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email }
@@ -168,30 +210,6 @@ async function run() {
         })
 
 
-
-        //All category
-        app.get('/categories', async (req, res) => {
-            const query = {};
-            const cursors = categoriesCollection.find(query)
-            const categorie = await cursors.toArray()
-            res.send(categorie)
-        })
-
-        app.get('/categorie/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) }
-            const categorie = await categoriesCollection.findOne(query)
-            res.send(categorie)
-        })
-
-        app.get('/categories/:name', async (req, res) => {
-            const name = req.params.name;
-            const query = {
-                categories_name: name
-            }
-            const result = await productsCollection.find(query).toArray()
-            res.send(result)
-        })
 
         //get bookings
         app.get('/bookings', verifyJWT, async (req, res) => {
