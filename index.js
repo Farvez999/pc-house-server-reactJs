@@ -76,7 +76,35 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/allUser/:role', async (req, res) => {
+            const role = req.params.role;
+            const query = { role: role };
+            const users = await usersCollection.find(query).toArray()
+            res.send(users);
+        })
 
+        // User get Admin permistion
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isAdmin: user?.role === 'admin' });
+        })
+
+        app.get('/users/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isSeller: user?.role === 'Seller' });
+        })
+
+        // User get Admin permistion
+        // app.get('/users/seller/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const query = { email }
+        //     const user = await usersCollection.findOne(query);
+        //     res.send({ isSeller: user?.role === 'Seller' });
+        // })
 
         // Update user role Admin
         app.put('/users/admin/:id', verifyJWT, async (req, res) => {
