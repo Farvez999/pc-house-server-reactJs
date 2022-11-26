@@ -41,6 +41,17 @@ async function run() {
         const productsCollection = client.db("used-products-resale-portal").collection("products");
         const bookingsCollection = client.db("used-products-resale-portal").collection("bookings");
 
+        const verifyAdmin = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
+
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+        }
+
         //All product get
         app.get('/products', async (req, res) => {
             // const id = req.params.id;
@@ -98,13 +109,7 @@ async function run() {
             res.send({ isSeller: user?.role === 'Seller' });
         })
 
-        // User get Admin permistion
-        // app.get('/users/seller/:email', async (req, res) => {
-        //     const email = req.params.email;
-        //     const query = { email }
-        //     const user = await usersCollection.findOne(query);
-        //     res.send({ isSeller: user?.role === 'Seller' });
-        // })
+
 
         // Update user role Admin
         app.put('/users/admin/:id', verifyJWT, async (req, res) => {
@@ -117,6 +122,23 @@ async function run() {
                 }
             }
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
+
+        // Buyer delete
+        app.delete('/buyers/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // Seller delete
+        app.delete('/sellers/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
             res.send(result);
         })
 
