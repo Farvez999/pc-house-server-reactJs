@@ -52,6 +52,17 @@ async function run() {
             next();
         }
 
+        const verifySeller = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
+
+            if (user?.role !== 'Seller') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+        }
+
         //All product get
         app.get('/products', async (req, res) => {
             // const id = req.params.id;
@@ -60,6 +71,12 @@ async function run() {
             const result = await productsCollection.find(query).toArray()
             res.send(result);
         });
+
+        app.post('/addProduct', verifyJWT, verifySeller, async (req, res) => {
+            const product = req.body;
+            const result = await productsCollection.insertOne(product);
+            res.send(result);
+        })
 
         // JWT
         app.get('/jwt', async (req, res) => {
@@ -77,6 +94,14 @@ async function run() {
         app.get('/users', async (req, res) => {
             const query = {}
             const users = await usersCollection.find(query).toArray()
+            res.send(users)
+        })
+
+        //All User
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const users = await usersCollection.findOne(query)
             res.send(users)
         })
 
