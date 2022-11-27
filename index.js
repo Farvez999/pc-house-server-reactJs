@@ -42,6 +42,7 @@ async function run() {
         const categoriesCollection = client.db("used-products-resale-portal").collection("categories");
         const productsCollection = client.db("used-products-resale-portal").collection("products");
         const bookingsCollection = client.db("used-products-resale-portal").collection("bookings");
+        const wishlistsCollection = client.db("used-products-resale-portal").collection("wishlists");
         const paymentsCollection = client.db("used-products-resale-portal").collection("payments");
 
         const verifyAdmin = async (req, res, next) => {
@@ -109,7 +110,16 @@ async function run() {
             res.send(result);
         });
 
+        //Seller product get
+        app.get('/products/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await productsCollection.find(query).toArray()
+            res.send(result);
+        });
 
+
+        //Seller add product
         app.post('/addProduct', verifyJWT, verifySeller, async (req, res) => {
             const product = req.body;
             const result = await productsCollection.insertOne(product);
@@ -257,6 +267,15 @@ async function run() {
             const result = await bookingsCollection.insertOne(booking)
             res.send(result);
         })
+
+        // Wishlist post add wishlist
+        app.post('/wishlist', async (req, res) => {
+            const wishlist = req.body;
+            console.log(wishlist)
+            const result = await wishlistsCollection.insertOne(wishlist)
+            res.send(result);
+        })
+
 
         // Payment booking api
         app.get('/bookings/:id', async (req, res) => {
