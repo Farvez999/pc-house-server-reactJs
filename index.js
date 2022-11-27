@@ -186,6 +186,21 @@ async function run() {
         })
 
 
+        // Update seller role verify
+        app.put('/users/seller/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    varify: 'verified'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
+
         // Buyer delete
         app.delete('/buyers/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
