@@ -99,9 +99,17 @@ async function run() {
             const query = {
                 category: name
             }
-            const result = await productsCollection.find(query).toArray()
-            res.send(result)
+
+            const products = await productsCollection.find(query).toArray()
+
+            // -----------booking paid == Category product dekhabe na--------------- 
+            const remainingProduct = products.filter(product => product.paid !== true)
+            // -----------booking paid == Category product dekhabe na--------------- 
+
+            res.send(remainingProduct)
         })
+
+
 
         //All product get
         app.get('/products', async (req, res) => {
@@ -123,7 +131,49 @@ async function run() {
         app.post('/addProduct', verifyJWT, verifySeller, async (req, res) => {
             const product = req.body;
             const result = await productsCollection.insertOne(product);
+            const id =
+                res.send(result);
+        })
+
+        //Get Advertise
+        app.get('/advertise', async (req, res) => {
+            const query = { advertise: true };
+            const result = await productsCollection.find(query).toArray()
             res.send(result);
+        });
+
+        //advertise data update
+        app.put('/addProduct/addAdvertisement/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const ProductQuery = {
+                _id: ObjectId(id)
+            }
+            const updatedDoc = {
+                $set: {
+                    advertise: true,
+                }
+            }
+            const result = await productsCollection.updateOne(ProductQuery, updatedDoc);
+            res.send(result);
+
+        })
+
+        //advertise data remove
+        app.put('/addProduct/removeAdvertisement/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const ProductQuery = {
+                _id: ObjectId(id)
+            }
+            const updatedDoc = {
+                $set: {
+                    advertise: false,
+                }
+            }
+            const result = await productsCollection.updateOne(ProductQuery, updatedDoc);
+            res.send(result);
+
         })
 
         // Seller delete
@@ -229,7 +279,7 @@ async function run() {
 
 
 
-        //get bookings
+        //get bookings my product
         app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email;
 
@@ -276,6 +326,22 @@ async function run() {
             res.send(result);
         })
 
+        //get wishlist my wishlist
+        app.get('/wishlists', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            // console.log('token', req.headers.authorization)
+
+            const query = { email: email };
+            const wishlists = await wishlistsCollection.find(query).toArray();
+            res.send(wishlists);
+        })
+
 
         // Payment booking api
         app.get('/bookings/:id', async (req, res) => {
@@ -285,8 +351,16 @@ async function run() {
             res.send(booking);
         })
 
-        // Payment Api
+        // Payment wishlists api
+        app.get('/wishlists/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const booking = await bookingsCollection.findOne(query)
+            res.send(booking);
+        })
 
+
+        // Payment Api
         app.post("/create-payment-intent", async (req, res) => {
             const booking = req.body;
             console.log(booking)
@@ -318,8 +392,25 @@ async function run() {
                 }
             }
             const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
+
+            //------------Order update hole paid true --------
+            const orderData = await bookingsCollection.findOne(filter)
+            const productQuery = {
+                _id: ObjectId(orderData.productId)
+            };
+            const productUpdateDoc = {
+                $set: {
+                    paid: true
+                }
+            }
+            const productUpdateResult = await productsCollection.updateOne(productQuery, productUpdateDoc);
+            const updatedProduct = await productsCollection.findOne(productQuery)
+            //------------Order update hole paid true --------
+
             res.send(result);
         })
+
+
 
 
     } finally {
