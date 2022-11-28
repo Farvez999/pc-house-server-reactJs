@@ -351,14 +351,6 @@ async function run() {
             res.send(booking);
         })
 
-        // Payment wishlists api
-        app.get('/wishlists/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) }
-            const booking = await bookingsCollection.findOne(query)
-            res.send(booking);
-        })
-
 
         // Payment Api
         app.post("/create-payment-intent", async (req, res) => {
